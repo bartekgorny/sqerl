@@ -18,15 +18,17 @@ tc() ->
             {'foo.bar_j','=','$j'}
         ]
         }]}}},
-    tc(10, Sqerl),
+    {No, Yes} = tc(100, Sqerl, {[], []}),
+    io:format("===========================~n"),
+    io:format("~p ~p~n", [lists:sum(No) / length(No), lists:sum(Yes) / length(Yes)]),
     ok.
 
-tc(0, _) ->
-    ok;
-tc(I, Sqerl) ->
+tc(0, _, Res) ->
+    Res;
+tc(I, Sqerl, {No, Yes}) ->
     BindList = [{Chr, rand:uniform(100)} || Chr <- [a, b, c, d, e, f, g, h, i, j]],
     Binds = maps:from_list(BindList),
     {T1, _} = timer:tc(fun() -> sqerl:sql(Sqerl, true) end),
     {T2, _} = timer:tc(fun() -> sqerl:sqlb(Sqerl, Binds, true) end),
-    io:format("~p ~p~n", [T1, T2]),
-    tc(I - 1, Sqerl).
+%%    io:format("~p ~p~n", [T1, T2]),
+    tc(I - 1, Sqerl, {[T1 | No], [T2 | Yes]}).

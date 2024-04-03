@@ -528,9 +528,39 @@ preprocess_sqerl(Sqerl, Binds) ->
     {Sqerl1, {_, Resolved, _}} = process_sqerl(Sqerl, {Binds, [], 1}),
     {Sqerl1, lists:reverse(Resolved)}.
 
-process_sqerl(T, State) when is_tuple(T) ->
-    {Res, State1} = process_sqerl(tuple_to_list(T), State),
-    {list_to_tuple(Res), State1};
+process_sqerl({A}, State) ->
+    {A1, StateA} = process_sqerl(A, State),
+    {{A1}, StateA};
+process_sqerl({A, B}, State) ->
+    {A1, StateA} = process_sqerl(A, State),
+    {B1, StateB} = process_sqerl(B, StateA),
+    {{A1, B1}, StateB};
+process_sqerl({A, B, C}, State) ->
+    {A1, StateA} = process_sqerl(A, State),
+    {B1, StateB} = process_sqerl(B, StateA),
+    {C1, StateC} = process_sqerl(C, StateB),
+    {{A1, B1, C1}, StateC};
+process_sqerl({A, B, C, D}, State) ->
+    {A1, StateA} = process_sqerl(A, State),
+    {B1, StateB} = process_sqerl(B, StateA),
+    {C1, StateC} = process_sqerl(C, StateB),
+    {D1, StateD} = process_sqerl(D, StateC),
+    {{A1, B1, C1, D1}, StateD};
+process_sqerl({A, B, C, D, E}, State) ->
+    {A1, StateA} = process_sqerl(A, State),
+    {B1, StateB} = process_sqerl(B, StateA),
+    {C1, StateC} = process_sqerl(C, StateB),
+    {D1, StateD} = process_sqerl(D, StateC),
+    {E1, StateE} = process_sqerl(E, StateD),
+    {{A1, B1, C1, D1, E1}, StateE};
+process_sqerl({A, B, C, D, E, F}, State) ->
+    {A1, StateA} = process_sqerl(A, State),
+    {B1, StateB} = process_sqerl(B, StateA),
+    {C1, StateC} = process_sqerl(C, StateB),
+    {D1, StateD} = process_sqerl(D, StateC),
+    {E1, StateE} = process_sqerl(E, StateD),
+    {F1, StateF} = process_sqerl(F, StateE),
+    {{A1, B1, C1, D1, E1, F1}, StateF};
 process_sqerl(L, State) when is_list(L) ->
     lists:mapfoldl(fun process_sqerl/2, State, L);
 process_sqerl(A, State) when is_atom(A) ->
