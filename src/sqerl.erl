@@ -1,5 +1,6 @@
 -module(sqerl).
 -export([sql/1, sql/2, unsafe_sql/1, unsafe_sql/2, encode/1]).
+-export([sqlb/2, sqlb/3]).
 
 %% @doc Generate an iolist (a tree of strings and/or binaries)
 %% for a literal SQL statement that corresponds to the Sqerl
@@ -21,6 +22,20 @@ sql(Sqerl, true) ->
     iolist_to_binary(sql(Sqerl));
 sql(Sqerl, false) ->
     sql(Sqerl).
+
+-spec sqlb(Sqerl::term(), map()) ->
+    {binary()| iolist(), list()}.
+sqlb(Sqerl, Bindings) ->
+    {Sqerl1, Bindings1} = preprocess_sqerl(Sqerl, Bindings),
+    {sql(Sqerl1), Bindings1}.
+
+-spec sqlb(Sqerl::term(), map(), boolean()) ->
+    {binary()| iolist(), list()}.
+sqlb(Sqerl, Bindings, true) ->
+    {Q, B} = sqlb(Sqerl, Bindings),
+    {iolist_to_binary(Q), B};
+sqlb(Sqerl, Bindings, false) ->
+    sqlb(Sqerl, Bindings).
 
 %% @doc Generate an iolist (a tree of strings and/or binaries)
 %% for a literal SQL statement that corresponds to the Sqerl
@@ -508,3 +523,29 @@ quote([$\^Z | Rest], Acc) ->
     quote(Rest, [$Z, $\\ | Acc]);
 quote([C | Rest], Acc) ->
     quote(Rest, [C | Acc]).
+
+preprocess_sqerl(Sqerl, Binds) ->
+    {Sqerl1, {_, Resolved, _}} = process_sqerl(Sqerl, {Binds, [], 1}),
+    {Sqerl1, lists:reverse(Resolved)}.
+
+process_sqerl(T, State) when is_tuple(T) ->
+    {Res, State1} = process_sqerl(tuple_to_list(T), State),
+    {list_to_tuple(Res), State1};
+process_sqerl(L, State) when is_list(L) ->
+    lists:mapfoldl(fun process_sqerl/2, State, L);
+process_sqerl(A, State) when is_atom(A) ->
+    case atom_to_list(A) of
+        [$$ | Name] ->
+            process_named(list_to_atom(Name), State);
+        _ ->
+            {A, State}
+    end.
+
+process_named(Name, {Named, Resolved, Counter}) ->
+    case Named of
+        #{Name := Val} ->
+            Ret = list_to_atom([$$ | integer_to_list(Counter)]),
+            {Ret, {Named, [Val | Resolved], Counter + 1}};
+        _ ->
+            error({missing_named_param, Name})
+    end.

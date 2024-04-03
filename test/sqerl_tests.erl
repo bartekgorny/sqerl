@@ -183,6 +183,20 @@ safe_test_() ->
                 ?_safe_test({select,'*',{from,developer},{where,{name,'=','?'}}})
             },
 
+
+
+
+%%            {select,'*',{from,developer},{where,{{name,'=','$a'}, 'or', {sthg, '=', '$b'}}}},
+%%            [{b, 8}, {a, 17}],
+%%
+%%
+%%            {select,'*',{from,developer},{where,{{name,'=','$2'}, 'or', {sthg, '=', '$1'}}}},
+%%            [8, 17],
+
+
+
+
+
             {<<"SELECT * FROM foo WHERE (a = (1 + 2 + 3))">>,
                 ?_safe_test({select,'*',{from,foo},{where,{a,'=',{'+',[1,2,3]}}}})
             },
