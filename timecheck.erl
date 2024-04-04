@@ -4,6 +4,9 @@
 -compile(export_all).
 
 tc() ->
+    tc(100).
+
+tc(I) ->
     Sqerl = {select,'*',{from,{foo,join,bar,[
         {'and', [
             {'foo.bar_a','=','$a'},
@@ -18,7 +21,7 @@ tc() ->
             {'foo.bar_j','=','$j'}
         ]
         }]}}},
-    {No, Yes} = tc(100, Sqerl, {[], []}),
+    {No, Yes} = tc(I, Sqerl, {[], []}),
     io:format("===========================~n"),
     io:format("~p ~p~n", [lists:sum(No) / length(No), lists:sum(Yes) / length(Yes)]),
     ok.
