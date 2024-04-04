@@ -531,19 +531,16 @@ preprocess_sqerl(Sqerl, Binds) ->
 process_sqerl({A}, State) ->
     {A1, StateA} = process_sqerl(A, State),
     {{A1}, StateA};
+process_sqerl({group_by, B}, State) ->
+    {B1, StateB} = process_sqerl(B, State),
+    {{group_by, B1}, StateB};
 process_sqerl({A, B}, State) ->
     {A1, StateA} = process_sqerl(A, State),
     {B1, StateB} = process_sqerl(B, StateA),
     {{A1, B1}, StateB};
-process_sqerl({A, '=', C}, State) ->
+process_sqerl({call, Fun, C}, State) ->
     {C1, StateC} = process_sqerl(C, State),
-    {{A, '=', C1}, StateC};
-process_sqerl({A, '>', C}, State) ->
-    {C1, StateC} = process_sqerl(C, State),
-    {{A, '>', C1}, StateC};
-process_sqerl({A, '<', C}, State) ->
-    {C1, StateC} = process_sqerl(C, State),
-    {{A, '<', C1}, StateC};
+    {{call, Fun, C1}, StateC};
 process_sqerl({A, B, C}, State) ->
     {A1, StateA} = process_sqerl(A, State),
     {B1, StateB} = process_sqerl(B, StateA),
@@ -572,48 +569,46 @@ process_sqerl({A, B, C, D, E, F}, State) ->
     {{A1, B1, C1, D1, E1, F1}, StateF};
 process_sqerl(L, State) when is_list(L) ->
     lists:mapfoldl(fun process_sqerl/2, State, L);
-process_sqerl(select, State) ->
-    {select, State};
-process_sqerl(update, State) ->
-    {update, State};
-process_sqerl(insert, State) ->
-    {insert, State};
-process_sqerl(where, State) ->
-    {where, State};
-process_sqerl('and', State) ->
-    {'and', State};
-process_sqerl('or', State) ->
-    {'or', State};
-process_sqerl('not', State) ->
-    {'not', State};
-process_sqerl('null', State) ->
-    {'null', State};
-process_sqerl(join, State) ->
-    {join, State};
-process_sqerl(left, State) ->
-    {left, State};
-process_sqerl(right, State) ->
-    {right, State};
-process_sqerl(inner, State) ->
-    {inner, State};
-process_sqerl(outer, State) ->
-    {outer, State};
-process_sqerl(on, State) ->
-    {on, State};
-process_sqerl(having, State) ->
-    {having, State};
-process_sqerl(call, State) ->
-    {call, State};
-process_sqerl('=', State) ->
-    {'=', State};
-process_sqerl('<', State) ->
-    {'<', State};
-process_sqerl('>', State) ->
-    {'>', State};
-process_sqerl(from, State) ->
-    {from, State};
-process_sqerl('*', State) ->
-    {'*', State};
+
+process_sqerl('*', State) -> {'*', State};
+process_sqerl('+', State) -> {'+', State};
+process_sqerl('-', State) -> {'-', State};
+process_sqerl('/', State) -> {'/', State};
+process_sqerl('<', State) -> {'<', State};
+process_sqerl('=', State) -> {'=', State};
+process_sqerl('>', State) -> {'>', State};
+process_sqerl('and', State) -> {'and', State};
+process_sqerl('not', State) -> {'not', State};
+process_sqerl('null', State) -> {'null', State};
+process_sqerl('or', State) -> {'or', State};
+process_sqerl(as, State) -> {as, State};
+process_sqerl(asc, State) -> {asc, State};
+process_sqerl(call, State) -> {call, State};
+process_sqerl(cross, State) -> {cross, State};
+process_sqerl(delete, State) -> {delete, State};
+process_sqerl(desc, State) -> {desc, State};
+process_sqerl(distinct, State) -> {distinct, State};
+process_sqerl(from, State) -> {from, State};
+process_sqerl(having, State) -> {having, State};
+process_sqerl(inner, State) -> {inner, State};
+process_sqerl(insert, State) -> {insert, State};
+process_sqerl(into, State) -> {into, State};
+process_sqerl(join, State) -> {join, State};
+process_sqerl(left, State) -> {left, State};
+process_sqerl(like, State) -> {like, State};
+process_sqerl(limit, State) -> {limit, State};
+process_sqerl(on, State) -> {on, State};
+process_sqerl(order_by, State) -> {order_by, State};
+process_sqerl(outer, State) -> {outer, State};
+process_sqerl(returning, State) -> {returning, State};
+process_sqerl(right, State) -> {right, State};
+process_sqerl(select, State) -> {select, State};
+process_sqerl(set, State) -> {set, State};
+process_sqerl(union, State) -> {union, State};
+process_sqerl(update, State) -> {update, State};
+process_sqerl(using, State) -> {using, State};
+process_sqerl(where, State) -> {where, State};
+
 process_sqerl(A, State) when is_atom(A) ->
     case atom_to_list(A) of
         [$$ | Name] ->
