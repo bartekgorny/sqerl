@@ -421,6 +421,8 @@ expr({call, FuncName, []}, _Safe) ->
     [convert(FuncName), <<"()">>];
 expr({call, FuncName, Params}, _Safe) ->
     [convert(FuncName), $(, make_list(Params, fun param/1), $)];
+expr({cast, Value, Type}, Safe) ->
+    [<<"cast(">>, expr2(Value, Safe), <<" as ">>, convert(Type), $)];
 expr({Val, Op, {select, _} = Subquery}, Safe) ->
     subquery(Val, Op, Subquery, Safe);
 expr({Val, Op, {select, _, _} = Subquery}, Safe) ->
@@ -570,11 +572,13 @@ process_sqerl({A, B, C, D, E, F}, State) ->
 process_sqerl(L, State) when is_list(L) ->
     lists:mapfoldl(fun process_sqerl/2, State, L);
 
+process_sqerl('!', State) -> {'!', State};
 process_sqerl('*', State) -> {'*', State};
 process_sqerl('+', State) -> {'+', State};
 process_sqerl('-', State) -> {'-', State};
 process_sqerl('/', State) -> {'/', State};
 process_sqerl('<', State) -> {'<', State};
+process_sqerl('<>', State) -> {'<>', State};
 process_sqerl('=', State) -> {'=', State};
 process_sqerl('>', State) -> {'>', State};
 process_sqerl('and', State) -> {'and', State};
@@ -584,6 +588,7 @@ process_sqerl('or', State) -> {'or', State};
 process_sqerl(as, State) -> {as, State};
 process_sqerl(asc, State) -> {asc, State};
 process_sqerl(call, State) -> {call, State};
+process_sqerl(cast, State) -> {cast, State};
 process_sqerl(cross, State) -> {cross, State};
 process_sqerl(delete, State) -> {delete, State};
 process_sqerl(desc, State) -> {desc, State};

@@ -183,20 +183,6 @@ safe_test_() ->
                 ?_safe_test({select,'*',{from,developer},{where,{name,'=','?'}}})
             },
 
-
-
-
-%%            {select,'*',{from,developer},{where,{{name,'=','$a'}, 'or', {sthg, '=', '$b'}}}},
-%%            [{b, 8}, {a, 17}],
-%%
-%%
-%%            {select,'*',{from,developer},{where,{{name,'=','$2'}, 'or', {sthg, '=', '$1'}}}},
-%%            [8, 17],
-
-
-
-
-
             {<<"SELECT * FROM foo WHERE (a = (1 + 2 + 3))">>,
                 ?_safe_test({select,'*',{from,foo},{where,{a,'=',{'+',[1,2,3]}}}})
             },
@@ -254,8 +240,11 @@ safe_test_() ->
               ?_safe_test({select,'*',{from,{foo,{cross,join},bar,{'foo.bar_id','=','bar.id'}}}})
             },
             {<<"SELECT * FROM foo JOIN bar ON (foo.bar_id = bar.id) JOIN baz ON (bar.baz_id = baz.id)">>,
-              ?_safe_test({select,'*',{from,{foo,[ {join,bar,{'foo.bar_id','=','bar.id'}},
-                                                   {join,baz,{'bar.baz_id','=','baz.id'}} ]}}})
+             ?_safe_test({select,'*',{from,{foo,[ {join,bar,{'foo.bar_id','=','bar.id'}},
+                                                  {join,baz,{'bar.baz_id','=','baz.id'}} ]}}})
+            },
+            {<<"SELECT cast(a as text) FROM foo WHERE (a = cast('22222' as integer))">>,
+              ?_safe_test({select, {cast, a, text}, {from, foo}, {where, {a, '=', {cast, "22222", integer}}}})
             }
         ]
     }.
@@ -353,3 +342,15 @@ unsafe_test_() ->
             }
         ]
     }.
+
+named_bindings_test() ->
+    [
+        bindings_test({<<"SELECT * FROM developer WHERE ((name = $1) OR (sthg = $2))">>, [11, 22]},
+                       {select,'*',{from,developer},{where,{{name,'=','$a'}, 'or', {sthg, '=', '$b'}}}}),
+        bindings_test({<<"INSERT INTO project(foo, bar, baz) VALUES ('$1', '$2', '$3')">>, [33, 22, 11]},
+                       {insert,project,{[foo,bar,baz],[{'$c','$b','$a'}]}})
+    ].
+
+
+bindings_test(Result, Expr) ->
+    ?assertEqual(Result, sqerl:sqlb(Expr, #{a => 11, b => 22, c => 33}, true)).
